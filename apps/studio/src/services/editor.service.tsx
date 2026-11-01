@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 
 import { BrowserNotSupportedModal } from '@/components/Modals';
 import { debugError, debugLog } from '@/helpers/debug';
+import { fetchText } from '@/helpers/fetch-text';
 import { appState, documentsState, filesState } from '@/state';
 import { DirectoryHandle, FileHandle } from '@/helpers/file-system-access.types';
 
@@ -145,11 +146,7 @@ export class EditorService extends AbstractService {
         content = await file.text();
       }
       if (!content && (/^https?:\/\//).test(uri)) {
-        const res = await fetch(uri);
-        if (!res.ok) {
-          throw new Error(`Failed to fetch ${uri}: ${res.status} ${res.statusText}`);
-        }
-        content = await res.text();
+        content = await fetchText(uri);
       }
 
       if (typeof content !== 'string') {
@@ -378,13 +375,7 @@ export class EditorService extends AbstractService {
     const currentUrl = globalThis.location.href.split('?')[0];
     globalThis.history.pushState({}, '', `${currentUrl}?url=${url}`);
 
-    return fetch(url)
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`Failed to fetch ${url}: ${res.status} ${res.statusText}`);
-        }
-        return res.text();
-      })
+    return fetchText(url)
       .then(async text => {
         const language = this.inferLanguageFromUri(url, text);
         const projectRoot = (() => {
